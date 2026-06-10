@@ -495,7 +495,9 @@ def main():
         ]
         await app.bot.set_my_commands(admin_commands, scope=BotCommandScopeChat(chat_id=ADMIN_ID))
     
-    app.job_queue.run_once(lambda _: asyncio.create_task(setup()), 0)
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(setup())
+    loop.close()
     
     logging.info("Бот CHOICE запущен на Render")
     app.run_polling()
