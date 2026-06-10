@@ -228,14 +228,13 @@ FREE_DESCRIPTION = (
 
 # ========== PLATEGA ==========
 async def create_platega_payment(user_id, amount, plan):
-    order_id = f"{user_id}_{uuid.uuid4().hex[:8]}"
-    
     payload = {
-        "amount": amount,
-        "currency": "RUB",
-        "order_id": order_id,
+        "paymentDetails": {
+            "amount": amount,
+            "currency": "RUB"
+        },
         "description": f"CHOICE | {plan}",
-        "url_callback": "https://choice-tracker-api.onrender.com/platega/webhook"
+        "payload": str(user_id)
     }
     
     headers = {
@@ -246,21 +245,26 @@ async def create_platega_payment(user_id, amount, plan):
     
     try:
         response = requests.post(
-            "https://app.platega.io/api/v1/invoice/create",
+            "https://app.platega.io/transaction/process",
             json=payload, headers=headers, timeout=30
         )
         
+        logging.info(f"Platega response: {response.status_code} - {response.text}")
+        
         if response.status_code == 200:
             data = response.json()
-            payment_url = data.get("url") or data.get("payment_url")
-            invoice_id = data.get("id") or data.get("invoice_id")
+            payment_url = data.get("redirect")
+            transaction_id = data.get("transactionId")
             
             if payment_url:
-                add_customer(user_id, "", "", plan, amount, "pending", invoice_id)
+                add_customer(user_id, "", "", plan, amount, "pending", transaction_id)
                 return payment_url
-        
-        logging.error(f"Platega error: {response.status_code} - {response.text}")
-        return None
+            else:
+                logging.error(f"No redirect in response: {data}")
+                return None
+        else:
+            logging.error(f"Platega error: {response.status_code} - {response.text}")
+            return None
     except Exception as e:
         logging.error(f"Platega failed: {e}")
         return None
