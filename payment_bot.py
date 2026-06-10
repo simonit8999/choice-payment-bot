@@ -259,7 +259,7 @@ async def create_platega_payment(user_id, amount, plan):
                 add_customer(user_id, "", "", plan, amount, "pending", invoice_id)
                 return payment_url
         
-        logging.error(f"Platega error: {response.text}")
+        logging.error(f"Platega error: {response.status_code} - {response.text}")
         return None
     except Exception as e:
         logging.error(f"Platega failed: {e}")
