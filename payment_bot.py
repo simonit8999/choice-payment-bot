@@ -229,6 +229,7 @@ FREE_DESCRIPTION = (
 # ========== PLATEGA ==========
 async def create_platega_payment(user_id, amount, plan):
     payload = {
+        "paymentMethod": 2,
         "paymentDetails": {
             "amount": amount,
             "currency": "RUB"
