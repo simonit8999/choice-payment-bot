@@ -26,6 +26,10 @@ FREE_BOT_LINK = "https://t.me/free3daysbot"
 PLATEGA_MERCHANT_ID = "eacaca79-afbc-43d6-aa0d-474a495e75d3"
 PLATEGA_SECRET_KEY = "3E8QrD5mn6VZkq9r16Xas3spTo0qgGUHAlfRstoaGdH93Nkee5kcuXqEcW6zegAovpo9TanEcH1QZGch68nup0EcBnaPpxo1VwX7"
 
+# ID групп
+PREMIUM_GROUP_ID = -1003503823617
+BASIC_GROUP_ID = -1003695482567
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # ========== БАЗА ДАННЫХ ==========
@@ -270,6 +274,28 @@ async def create_platega_payment(user_id, amount, plan):
         logging.error(f"Platega failed: {e}")
         return None
 
+# ========== СОЗДАНИЕ ССЫЛОК ==========
+async def create_invite_link(user_id, plan):
+    """Создаёт одноразовую ссылку-приглашение в группу"""
+    group_id = PREMIUM_GROUP_ID if plan == 'premium' else BASIC_GROUP_ID
+    
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/createChatInviteLink"
+        payload = {
+            "chat_id": group_id,
+            "member_limit": 1,
+            "name": f"user_{user_id}"
+        }
+        response = requests.post(url, json=payload, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('ok'):
+                return data['result']['invite_link']
+        return None
+    except:
+        return None
+
 # ========== РАССЫЛКИ ==========
 temp_data = {}
 
@@ -498,17 +524,35 @@ async def activate_premium_command(update, context):
         conn = sqlite3.connect(DB_PATH); c = conn.cursor()
         c.execute('''INSERT OR REPLACE INTO premium_users (user_id, activated_at, plan) VALUES (?, ?, 'premium')''',
                   (user_id, datetime.now().isoformat()))
-        c.execute('''UPDATE customers SET status = 'activated', plan = 'premium', amount = 1500 WHERE user_id = ?''', (user_id,))
+        c.execute('''INSERT OR REPLACE INTO customers (user_id, purchased_at, plan, amount, status) 
+                     VALUES (?, ?, 'premium', 1500, 'activated')''',
+                  (user_id, datetime.now().isoformat()))
         conn.commit(); conn.close()
         
-        context.user_data['activating_user_id'] = user_id
-        context.user_data['activating_plan'] = 'premium'
+        # Создаём одноразовую ссылку
+        invite_link = await create_invite_link(user_id, 'premium')
         
-        await update.message.reply_text(
-            f"✅ Пользователь {user_id} в базе Premium.\n"
-            "Отправь ссылки на группы или 'пропустить'."
-        )
-    except: await update.message.reply_text("❌ /activate_premium <user_id>")
+        if invite_link:
+            message = (
+                f"👑 <b>Premium активирован!</b>\n\n"
+                f"🔗 Твоя ссылка в Premium-группу:\n{invite_link}\n"
+                f"⚠️ Ссылка одноразовая, не передавай никому\n\n"
+                f"📅 Трекер: {TRACKER_LINK}"
+            )
+        else:
+            message = (
+                f"👑 <b>Premium активирован!</b>\n\n"
+                f"⚠️ Не удалось создать ссылку. Напиши @Piholaa\n\n"
+                f"📅 Трекер: {TRACKER_LINK}"
+            )
+        
+        try:
+            await context.bot.send_message(chat_id=user_id, text=message, parse_mode="HTML")
+            await update.message.reply_text(f"✅ Premium выдан пользователю {user_id}\n🔗 {invite_link}")
+        except Exception as e:
+            await update.message.reply_text(f"✅ Premium в базе, но сообщение не отправилось: {e}")
+    except: 
+        await update.message.reply_text("❌ /activate_premium <user_id>")
 
 async def activate_basic_command(update, context):
     if update.effective_user.id != ADMIN_ID: return
@@ -517,17 +561,35 @@ async def activate_basic_command(update, context):
         conn = sqlite3.connect(DB_PATH); c = conn.cursor()
         c.execute('''INSERT OR REPLACE INTO basic_users (user_id, activated_at, plan) VALUES (?, ?, 'basic')''',
                   (user_id, datetime.now().isoformat()))
-        c.execute('''UPDATE customers SET status = 'activated', plan = 'basic', amount = 500 WHERE user_id = ?''', (user_id,))
+        c.execute('''INSERT OR REPLACE INTO customers (user_id, purchased_at, plan, amount, status) 
+                     VALUES (?, ?, 'basic', 500, 'activated')''',
+                  (user_id, datetime.now().isoformat()))
         conn.commit(); conn.close()
         
-        context.user_data['activating_user_id'] = user_id
-        context.user_data['activating_plan'] = 'basic'
+        # Создаём одноразовую ссылку
+        invite_link = await create_invite_link(user_id, 'basic')
         
-        await update.message.reply_text(
-            f"✅ Пользователь {user_id} в базе Basic.\n"
-            "Отправь ссылку на группу или 'пропустить'."
-        )
-    except: await update.message.reply_text("❌ /activate_basic <user_id>")
+        if invite_link:
+            message = (
+                f"🎫 <b>Базовый доступ активирован!</b>\n\n"
+                f"🔗 Твоя ссылка в группу:\n{invite_link}\n"
+                f"⚠️ Ссылка одноразовая, не передавай никому\n\n"
+                f"📅 Трекер: {TRACKER_LINK}"
+            )
+        else:
+            message = (
+                f"🎫 <b>Базовый доступ активирован!</b>\n\n"
+                f"⚠️ Не удалось создать ссылку. Напиши @Piholaa\n\n"
+                f"📅 Трекер: {TRACKER_LINK}"
+            )
+        
+        try:
+            await context.bot.send_message(chat_id=user_id, text=message, parse_mode="HTML")
+            await update.message.reply_text(f"✅ Basic выдан пользователю {user_id}\n🔗 {invite_link}")
+        except Exception as e:
+            await update.message.reply_text(f"✅ Basic в базе, но сообщение не отправилось: {e}")
+    except: 
+        await update.message.reply_text("❌ /activate_basic <user_id>")
 
 # ========== ОБРАБОТЧИК ТЕКСТА ==========
 async def handle_text(update, context):
@@ -537,34 +599,6 @@ async def handle_text(update, context):
     if user_id in temp_data:
         if await handle_broadcast_input(update, context): return
         if await handle_broadcast_text(update, context): return
-    
-    if 'activating_user_id' in context.user_data:
-        target_user_id = context.user_data['activating_user_id']
-        plan = context.user_data.get('activating_plan', 'premium')
-        
-        if text.lower() == 'пропустить':
-            msg = f"👑 <b>Premium активирован!</b>\n\n🔗 Трекер: {TRACKER_LINK}" if plan == 'premium' else f"🎫 <b>Базовый активирован!</b>\n\n🔗 Трекер: {TRACKER_LINK}"
-            try: await context.bot.send_message(chat_id=target_user_id, text=msg, parse_mode="HTML")
-            except: pass
-            await update.message.reply_text("✅ Отправлено")
-            del context.user_data['activating_user_id']
-            del context.user_data['activating_plan']
-            return
-        
-        links = [l.strip() for l in text.split('\n') if l.strip().startswith('https://')]
-        msg = f"👑 <b>Premium активирован!</b>\n\n" if plan == 'premium' else f"🎫 <b>Базовый активирован!</b>\n\n"
-        if links: msg += f"🔗 Группа: {links[0]}\n"
-        msg += f"\n🔗 Трекер: {TRACKER_LINK}"
-        
-        try:
-            await context.bot.send_message(chat_id=target_user_id, text=msg, parse_mode="HTML")
-            await update.message.reply_text(f"✅ Отправлено пользователю {target_user_id}")
-        except Exception as e:
-            await update.message.reply_text(f"❌ Ошибка: {e}")
-        
-        del context.user_data['activating_user_id']
-        del context.user_data['activating_plan']
-        return
     
     if text == "🏠 Главная":
         keyboard = InlineKeyboardMarkup([
@@ -619,3 +653,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
