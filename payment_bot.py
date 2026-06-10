@@ -117,6 +117,92 @@ def get_reply_keyboard():
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
+# ========== ТЕКСТЫ ==========
+WELCOME_MESSAGES = [
+    (
+        "⚔️ <b>Ты здесь. Это уже половина победы.</b>\n\n"
+        "Знаешь, сколько мужчин годами обещают себе «последний раз»? Миллионы. "
+        "А сколько доходят до реальных действий? Единицы.\n\n"
+        "Ты открыл этого бота. Ты уже в числе тех, кто решился. Не на словах — на деле.\n\n"
+        "Я не буду тебе рассказывать про «вред мастурбации». Ты и так знаешь. "
+        "Ты чувствуешь это каждый раз когда сливаешь энергию, фокус, уверенность. "
+        "Ты знаешь что после этого мир становится серым.\n\n"
+        "Ты здесь потому что хочешь вернуть контроль. И ты его вернёшь.\n\n"
+        "Это не лекция. Это система. <b>60 дней, которые изменят всё.</b>"
+    ),
+    (
+        "🔥 <b>60 дней. Не 30. Не «попробую недельку».</b>\n\n"
+        "За 60 дней можно изменить всё. Серьёзно. Оглянись на 2 месяца назад. "
+        "Кем ты был? Что ты делал? А теперь представь кем ты станешь через 60 дней "
+        "если каждый день будешь делать шаг вперёд.\n\n"
+        "Этот трекер — не просто «не дрочи». Это система строительства себя.\n\n"
+        "Первые 30 дней ты убираешь зависимость и возвращаешь контроль.\n"
+        "Вторые 30 дней ты строишь: деньги, тело, окружение, женщин, смыслы.\n\n"
+        "<b>60 дней. Один трекер. Две фазы. Полная трансформация.</b>"
+    ),
+    (
+        "⚡ <b>Последнее перед выбором.</b>\n\n"
+        "Будет тяжело. На 7-й день мозг начнёт торговаться. На 15-й — кричать. "
+        "На 25-й — шептать: «один раз можно». На 35-й — скажет «ты уже доказал, можно остановиться».\n\n"
+        "Не слушай. Ты идёшь до конца.\n\n"
+        "60 дней — это не марафон. Это новая жизнь. И ты на пороге.\n\n"
+        "Выбери тариф. И начни путь.\n\n"
+        "<b>Через 60 дней ты не узнаешь себя в зеркале. И это не метафора.</b>"
+    ),
+]
+
+PREMIUM_DESCRIPTION = (
+    "👑 <b>PREMIUM — 60 ДНЕЙ ТРАНСФОРМАЦИИ</b>\n\n"
+    "Стоимость: <b>1500₽</b> (единоразово, навсегда)\n\n"
+    "Два месяца, которые изменят твою жизнь. Не «просто не дрочи». Строй.\n\n"
+    "📅 <b>60 дней — две фазы</b>\n"
+    "Первые 30: убираешь зависимость, возвращаешь контроль.\n"
+    "Вторые 30: строишь деньги, тело, окружение, отношения, смыслы.\n\n"
+    "🧠 <b>Перестройка мозга</b>\n"
+    "60 дней достаточно чтобы сформировать новые нейронные связи. Дофаминовая система восстановится полностью.\n\n"
+    "💰 <b>Задания на деньги и доход</b>\n"
+    "Энергия, которая раньше сливалась — пойдёт в заработок. Конкретные техники.\n\n"
+    "👥 <b>Отдельная Premium-группа</b>\n"
+    "Закрытое комьюнити тех кто идёт до конца. Две фазы программы внутри.\n\n"
+    "👑 <b>Премиальный дизайн трекера</b>\n"
+    "Золотая тема, достижения каждые 10 дней, сертификат после 60 дней.\n\n"
+    "🏆 <b>Достижения + Сертификат</b>\n"
+    "Отмечай прогресс. После 60 дней — официальный сертификат.\n\n"
+    "💬 <b>Персональная поддержка автора</b>\n"
+    "Разбор срывов, ответы на вопросы, корректировка стратегии.\n\n"
+    "🤖 <b>ИИ-промпты</b>\n"
+    "Готовые промпты для ChatGPT/Claude/DeepSeek для анализа твоего прогресса.\n\n"
+    "🔔 <b>Уведомления от бота</b>\n"
+    "Напоминания в выбранное время с учётом твоего часового пояса.\n\n"
+    "После оплаты доступ откроется автоматически."
+)
+
+BASIC_DESCRIPTION = (
+    "🎫 <b>БАЗОВЫЙ — 30 ДНЕЙ</b>\n\n"
+    "Стоимость: <b>500₽</b> (единоразово, навсегда)\n\n"
+    "Первый шаг к восстановлению контроля.\n\n"
+    "📅 <b>Трекер на 30 дней</b>\n"
+    "Ежедневные задания. Система без силы воли. Закрашивай дни зелёным.\n\n"
+    "🎧 <b>Аудио-версия каждого дня</b>\n"
+    "Слушай задания как подкаст. В дороге, на тренировке, перед сном.\n\n"
+    "👥 <b>Закрытая группа участников</b>\n"
+    "Все 30 дней программы внутри группы. Общение с такими же. Поддержка, вопросы, отчёты.\n\n"
+    "🔔 <b>Напоминания от бота</b>\n"
+    "Не забудешь отметить день. Бот напомнит в выбранное время.\n\n"
+    "После оплаты доступ откроется автоматически."
+)
+
+FREE_DESCRIPTION = (
+    "🆓 <b>БЕСПЛАТНЫЙ ДОСТУП</b>\n\n"
+    "Попробуй программу. Без оплаты. Без обязательств.\n\n"
+    "Что ты получаешь:\n"
+    "• День 0 — подготовка и договор с собой\n"
+    "• Дни 1, 2, 3 — первые задания трекера\n"
+    "• Чат для общения с другими участниками\n\n"
+    "Это полноценный старт. Ты увидишь как работает система и примешь решение.\n\n"
+    f"Переходи в {FREE_BOT_LINK}"
+)
+
 # ========== PLATEGA ==========
 async def create_platega_payment(user_id, amount, plan):
     order_id = f"{user_id}_{uuid.uuid4().hex[:8]}"
@@ -258,8 +344,25 @@ async def start(update, context):
     user_id = update.effective_user.id
     user = update.effective_user
     
-    if not has_seen_welcome(user_id):
-        add_customer(user_id, user.username or '', user.first_name or '', 'visitor', 0, 'seen_welcome')
+    # Если уже видел приветствие — сразу в меню
+    if has_seen_welcome(user_id):
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("👑 Premium — 1500₽", callback_data="buy_premium")],
+            [InlineKeyboardButton("🎫 Базовый — 500₽", callback_data="buy_basic")],
+            [InlineKeyboardButton("🆓 Бесплатно — 3 дня", callback_data="free_access")],
+            [InlineKeyboardButton("❓ Помощь", callback_data="help")]
+        ])
+        await update.message.reply_text("💎 CHOICE | 60 DAYS\nАвторская программа.\nВыбери тариф:", reply_markup=keyboard)
+        await update.message.reply_text("Выбери действие:", reply_markup=get_reply_keyboard())
+        return
+    
+    # Первый запуск — цепочка приветствий
+    add_customer(user_id, user.username or '', user.first_name or '', 'visitor', 0, 'seen_welcome')
+    
+    for i, msg in enumerate(WELCOME_MESSAGES):
+        await update.message.reply_text(msg, parse_mode="HTML")
+        if i < len(WELCOME_MESSAGES) - 1:
+            await asyncio.sleep(3)
     
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("👑 Premium — 1500₽", callback_data="buy_premium")],
@@ -267,8 +370,7 @@ async def start(update, context):
         [InlineKeyboardButton("🆓 Бесплатно — 3 дня", callback_data="free_access")],
         [InlineKeyboardButton("❓ Помощь", callback_data="help")]
     ])
-    
-    await update.message.reply_text("💎 CHOICE | 30 DAYS\nАвторская программа.\nВыбери тариф:", reply_markup=keyboard)
+    await update.message.reply_text("💎 CHOICE | 60 DAYS\nАвторская программа.\nВыбери тариф:", reply_markup=keyboard)
     await update.message.reply_text("Выбери действие:", reply_markup=get_reply_keyboard())
 
 async def premium_handler(update, context):
@@ -279,7 +381,7 @@ async def premium_handler(update, context):
     
     if payment_url:
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 1500₽", url=payment_url)]])
-        await query.message.reply_text("👑 <b>Premium — всё включено</b>\n\nСтоимость: <b>1500₽</b>\n\nПосле оплаты доступ придёт автоматически.", parse_mode="HTML", reply_markup=keyboard)
+        await query.message.reply_text(PREMIUM_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
     else:
         await query.message.reply_text("❌ Ошибка. Попробуй позже или напиши @Piholaa")
 
@@ -291,14 +393,14 @@ async def basic_handler(update, context):
     
     if payment_url:
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 500₽", url=payment_url)]])
-        await query.message.reply_text("🎫 <b>Базовый — трекер + группа</b>\n\nСтоимость: <b>500₽</b>\n\nПосле оплаты доступ придёт автоматически.", parse_mode="HTML", reply_markup=keyboard)
+        await query.message.reply_text(BASIC_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
     else:
         await query.message.reply_text("❌ Ошибка. Попробуй позже или напиши @Piholaa")
 
 async def free_handler(update, context):
     query = update.callback_query; await query.answer()
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🆓 Перейти к боту", url=FREE_BOT_LINK)]])
-    await query.message.reply_text("🆓 <b>Бесплатный доступ — 3 дня</b>\n\nПереходи по ссылке:", parse_mode="HTML", reply_markup=keyboard)
+    await query.message.reply_text(FREE_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
 
 async def help_handler(update, context):
     query = update.callback_query; await query.answer()
@@ -318,7 +420,7 @@ async def back_to_start_handler(update, context):
         [InlineKeyboardButton("🆓 Бесплатно — 3 дня", callback_data="free_access")],
         [InlineKeyboardButton("❓ Помощь", callback_data="help")]
     ])
-    await query.message.reply_text("💎 CHOICE | 30 DAYS\nВыбери тариф:", reply_markup=keyboard)
+    await query.message.reply_text("💎 CHOICE | 60 DAYS\nВыбери тариф:", reply_markup=keyboard)
 
 # ========== АДМИН-КОМАНДЫ ==========
 async def stats_command(update, context):
@@ -429,13 +531,13 @@ async def handle_text(update, context):
             [InlineKeyboardButton("🆓 Бесплатно — 3 дня", callback_data="free_access")],
             [InlineKeyboardButton("❓ Помощь", callback_data="help")]
         ])
-        await update.message.reply_text("💎 CHOICE | 30 DAYS\nВыбери тариф:", reply_markup=keyboard)
+        await update.message.reply_text("💎 CHOICE | 60 DAYS\nВыбери тариф:", reply_markup=keyboard)
     elif text == "👑 Premium":
         await update.message.reply_text("⏳ Создаю платёж...")
         payment_url = await create_platega_payment(user_id, 1500, "premium")
         if payment_url:
             keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 1500₽", url=payment_url)]])
-            await update.message.reply_text("👑 <b>Premium — 1500₽</b>", parse_mode="HTML", reply_markup=keyboard)
+            await update.message.reply_text(PREMIUM_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
         else:
             await update.message.reply_text("❌ Ошибка.")
     elif text == "🎫 Базовый":
@@ -443,12 +545,12 @@ async def handle_text(update, context):
         payment_url = await create_platega_payment(user_id, 500, "basic")
         if payment_url:
             keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 500₽", url=payment_url)]])
-            await update.message.reply_text("🎫 <b>Базовый — 500₽</b>", parse_mode="HTML", reply_markup=keyboard)
+            await update.message.reply_text(BASIC_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
         else:
             await update.message.reply_text("❌ Ошибка.")
     elif text == "🆓 Бесплатно":
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🆓 Перейти", url=FREE_BOT_LINK)]])
-        await update.message.reply_text("🆓 <b>Бесплатный доступ — 3 дня</b>", parse_mode="HTML", reply_markup=keyboard)
+        await update.message.reply_text(FREE_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
     elif text == "❓ Помощь":
         await update.message.reply_text(f"❓ <b>Помощь</b>\n\n📞 Поддержка: @Piholaa\n📋 Политика: {PRIVACY_POLICY}\n📄 Соглашение: {TERMS_OF_USE}", parse_mode="HTML", reply_markup=get_reply_keyboard())
     else:
@@ -468,7 +570,6 @@ def main():
     app.add_handler(CommandHandler("broadcast_premium", premium_broadcast))
     app.add_handler(CommandHandler("broadcast_basic", basic_broadcast))
     app.add_handler(CommandHandler("cancel", cancel_broadcast))
-    
     app.add_handler(CallbackQueryHandler(premium_handler, pattern="^buy_premium$"))
     app.add_handler(CallbackQueryHandler(basic_handler, pattern="^buy_basic$"))
     app.add_handler(CallbackQueryHandler(free_handler, pattern="^free_access$"))
