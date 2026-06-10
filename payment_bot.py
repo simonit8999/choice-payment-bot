@@ -149,6 +149,29 @@ WELCOME_MESSAGES = [
         "Выбери тариф. И начни путь.\n\n"
         "<b>Через 60 дней ты не узнаешь себя в зеркале. И это не метафора.</b>"
     ),
+    (
+        "💎 <b>ТРИ ТАРИФА. ОДИН ПУТЬ.</b>\n\n"
+        "🆓 <b>Бесплатный доступ</b>\n"
+        "• День 0 — подготовка и договор\n"
+        "• Дни 1-3 — первые задания\n"
+        "• Чат для общения\n"
+        "• Бесплатно\n\n"
+        "🎫 <b>Базовый — 500₽</b>\n"
+        "• Трекер на 30 дней\n"
+        "• Аудио-версия каждого дня\n"
+        "• Закрытая группа (все 30 дней внутри)\n"
+        "• Напоминания от бота\n\n"
+        "👑 <b>Premium — 1500₽</b>\n"
+        "• 60 дней — две фазы трансформации\n"
+        "• Отдельная Premium-группа\n"
+        "• Задания на деньги, тело, окружение\n"
+        "• Премиальный дизайн трекера\n"
+        "• Достижения каждые 10 дней + Сертификат\n"
+        "• Персональная поддержка автора\n"
+        "• ИИ-промпты\n"
+        "• Уведомления с часовым поясом\n\n"
+        "<b>Выбери свой тариф ниже.</b>"
+    ),
 ]
 
 PREMIUM_DESCRIPTION = (
@@ -344,7 +367,6 @@ async def start(update, context):
     user_id = update.effective_user.id
     user = update.effective_user
     
-    # Если уже видел приветствие — сразу в меню
     if has_seen_welcome(user_id):
         keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton("👑 Premium — 1500₽", callback_data="buy_premium")],
@@ -356,13 +378,12 @@ async def start(update, context):
         await update.message.reply_text("Выбери действие:", reply_markup=get_reply_keyboard())
         return
     
-    # Первый запуск — цепочка приветствий
     add_customer(user_id, user.username or '', user.first_name or '', 'visitor', 0, 'seen_welcome')
     
     for i, msg in enumerate(WELCOME_MESSAGES):
         await update.message.reply_text(msg, parse_mode="HTML")
         if i < len(WELCOME_MESSAGES) - 1:
-            await asyncio.sleep(3)
+            await asyncio.sleep(10)
     
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("👑 Premium — 1500₽", callback_data="buy_premium")],
@@ -375,32 +396,48 @@ async def start(update, context):
 
 async def premium_handler(update, context):
     query = update.callback_query; await query.answer()
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("💳 Оплатить 1500₽", callback_data="pay_premium")]
+    ])
+    await query.message.reply_text(PREMIUM_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
+
+async def basic_handler(update, context):
+    query = update.callback_query; await query.answer()
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("💳 Оплатить 500₽", callback_data="pay_basic")]
+    ])
+    await query.message.reply_text(BASIC_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
+
+async def free_handler(update, context):
+    query = update.callback_query; await query.answer()
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🆓 Перейти к боту", url=FREE_BOT_LINK)]
+    ])
+    await query.message.reply_text(FREE_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
+
+async def pay_premium_handler(update, context):
+    query = update.callback_query; await query.answer()
     user_id = query.from_user.id
     await query.message.reply_text("⏳ Создаю платёж...")
     payment_url = await create_platega_payment(user_id, 1500, "premium")
     
     if payment_url:
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 1500₽", url=payment_url)]])
-        await query.message.reply_text(PREMIUM_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Перейти к оплате", url=payment_url)]])
+        await query.message.reply_text("🔗 Нажми кнопку ниже чтобы оплатить:", reply_markup=keyboard)
     else:
         await query.message.reply_text("❌ Ошибка. Попробуй позже или напиши @Piholaa")
 
-async def basic_handler(update, context):
+async def pay_basic_handler(update, context):
     query = update.callback_query; await query.answer()
     user_id = query.from_user.id
     await query.message.reply_text("⏳ Создаю платёж...")
     payment_url = await create_platega_payment(user_id, 500, "basic")
     
     if payment_url:
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 500₽", url=payment_url)]])
-        await query.message.reply_text(BASIC_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Перейти к оплате", url=payment_url)]])
+        await query.message.reply_text("🔗 Нажми кнопку ниже чтобы оплатить:", reply_markup=keyboard)
     else:
         await query.message.reply_text("❌ Ошибка. Попробуй позже или напиши @Piholaa")
-
-async def free_handler(update, context):
-    query = update.callback_query; await query.answer()
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🆓 Перейти к боту", url=FREE_BOT_LINK)]])
-    await query.message.reply_text(FREE_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
 
 async def help_handler(update, context):
     query = update.callback_query; await query.answer()
@@ -533,21 +570,11 @@ async def handle_text(update, context):
         ])
         await update.message.reply_text("💎 CHOICE | 60 DAYS\nВыбери тариф:", reply_markup=keyboard)
     elif text == "👑 Premium":
-        await update.message.reply_text("⏳ Создаю платёж...")
-        payment_url = await create_platega_payment(user_id, 1500, "premium")
-        if payment_url:
-            keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 1500₽", url=payment_url)]])
-            await update.message.reply_text(PREMIUM_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
-        else:
-            await update.message.reply_text("❌ Ошибка.")
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 1500₽", callback_data="pay_premium")]])
+        await update.message.reply_text(PREMIUM_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
     elif text == "🎫 Базовый":
-        await update.message.reply_text("⏳ Создаю платёж...")
-        payment_url = await create_platega_payment(user_id, 500, "basic")
-        if payment_url:
-            keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 500₽", url=payment_url)]])
-            await update.message.reply_text(BASIC_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
-        else:
-            await update.message.reply_text("❌ Ошибка.")
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 500₽", callback_data="pay_basic")]])
+        await update.message.reply_text(BASIC_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
     elif text == "🆓 Бесплатно":
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🆓 Перейти", url=FREE_BOT_LINK)]])
         await update.message.reply_text(FREE_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
@@ -570,9 +597,12 @@ def main():
     app.add_handler(CommandHandler("broadcast_premium", premium_broadcast))
     app.add_handler(CommandHandler("broadcast_basic", basic_broadcast))
     app.add_handler(CommandHandler("cancel", cancel_broadcast))
+    
     app.add_handler(CallbackQueryHandler(premium_handler, pattern="^buy_premium$"))
     app.add_handler(CallbackQueryHandler(basic_handler, pattern="^buy_basic$"))
     app.add_handler(CallbackQueryHandler(free_handler, pattern="^free_access$"))
+    app.add_handler(CallbackQueryHandler(pay_premium_handler, pattern="^pay_premium$"))
+    app.add_handler(CallbackQueryHandler(pay_basic_handler, pattern="^pay_basic$"))
     app.add_handler(CallbackQueryHandler(help_handler, pattern="^help$"))
     app.add_handler(CallbackQueryHandler(back_to_start_handler, pattern="^back_to_start$"))
     app.add_handler(CallbackQueryHandler(handle_broadcast_callback, pattern="^pbcast_"))
