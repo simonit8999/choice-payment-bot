@@ -478,27 +478,6 @@ def main():
     
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     
-    async def setup():
-        commands = [BotCommand("start", "🏠 Главное меню")]
-        await app.bot.set_my_commands(commands)
-        
-        from telegram import BotCommandScopeChat
-        admin_commands = commands + [
-            BotCommand("stats", "📊 Статистика"),
-            BotCommand("customers", "👥 Клиенты"),
-            BotCommand("activate_premium", "👑 Активировать Premium"),
-            BotCommand("activate_basic", "🎫 Активировать Базовый"),
-            BotCommand("broadcast_all", "📨 Рассылка всем"),
-            BotCommand("broadcast_premium", "👑 Рассылка Premium"),
-            BotCommand("broadcast_basic", "🎫 Рассылка Базовым"),
-            BotCommand("cancel", "❌ Отменить рассылку"),
-        ]
-        await app.bot.set_my_commands(admin_commands, scope=BotCommandScopeChat(chat_id=ADMIN_ID))
-    
-    loop = asyncio.new_event_loop()
-    loop.run_until_complete(setup())
-    loop.close()
-    
     logging.info("Бот CHOICE запущен на Render")
     app.run_polling()
 
