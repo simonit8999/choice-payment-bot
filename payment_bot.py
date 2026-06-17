@@ -529,7 +529,16 @@ async def activate_premium_command(update, context):
                   (user_id, datetime.now().isoformat()))
         conn.commit(); conn.close()
         
-        # Создаём одноразовую ссылку
+        # Отправляем в API
+        try:
+            requests.post('https://choice-tracker-api.onrender.com/api/add-access', json={
+                'user_id': user_id,
+                'plan': 'premium',
+                'secret': 'choice_super_secret_key_2025'
+            }, timeout=10)
+        except:
+            pass
+        
         invite_link = await create_invite_link(user_id, 'premium')
         
         if invite_link:
@@ -566,7 +575,16 @@ async def activate_basic_command(update, context):
                   (user_id, datetime.now().isoformat()))
         conn.commit(); conn.close()
         
-        # Создаём одноразовую ссылку
+        # Отправляем в API
+        try:
+            requests.post('https://choice-tracker-api.onrender.com/api/add-access', json={
+                'user_id': user_id,
+                'plan': 'basic',
+                'secret': 'choice_super_secret_key_2025'
+            }, timeout=10)
+        except:
+            pass
+        
         invite_link = await create_invite_link(user_id, 'basic')
         
         if invite_link:
