@@ -33,7 +33,7 @@ BASIC_GROUP_ID = -1003695482567
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # ========== БАЗА ДАННЫХ ==========
-DB_PATH = '/tmp/payments.db'
+DB_PATH = 'payments.db'
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
