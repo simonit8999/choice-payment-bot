@@ -10,7 +10,7 @@ from datetime import datetime
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
-DB_PATH = '/tmp/payments.db'
+DB_PATH = 'payments.db'
 BOT_TOKEN = "8630243895:AAGTaovmMcfBpnpmOqGfVO58mDVv5c4nlnk"
 TRACKER_LINK = "https://t.me/Choice111Bot?startapp=choicetracker"
 
