@@ -30,6 +30,10 @@ PLATEGA_SECRET_KEY = "3E8QrD5mn6VZkq9r16Xas3spTo0qgGUHAlfRstoaGdH93Nkee5kcuXqEcW
 PREMIUM_GROUP_ID = -1003503823617
 BASIC_GROUP_ID = -1003695482567
 
+# API
+API_URL = 'https://choice-tracker-api.onrender.com'
+API_SECRET = 'choice_super_secret_key_2025'
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # ========== БАЗА ДАННЫХ ==========
@@ -86,14 +90,6 @@ def get_all_basic_users():
     conn.close()
     return [r[0] for r in rows]
 
-def get_customers_by_plan(plan):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('SELECT user_id FROM customers WHERE plan = ?', (plan,))
-    rows = c.fetchall()
-    conn.close()
-    return [r[0] for r in rows]
-
 def has_seen_welcome(user_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -111,6 +107,24 @@ def add_scheduled_broadcast(broadcast_type, text, has_button, button_text, butto
               (broadcast_type, text, has_button, button_text, button_url, send_time))
     conn.commit()
     conn.close()
+
+def is_premium(user_id):
+    """Проверяет доступ через API"""
+    try:
+        resp = requests.get(f'{API_URL}/api/check-access/{user_id}', timeout=5)
+        if resp.status_code == 200:
+            return resp.json().get('has_access', False)
+    except:
+        pass
+    # Запасной вариант — локальная база
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT user_id FROM premium_users WHERE user_id = ?', (user_id,))
+    premium = c.fetchone()
+    c.execute('SELECT user_id FROM basic_users WHERE user_id = ?', (user_id,))
+    basic = c.fetchone()
+    conn.close()
+    return premium is not None or basic is not None
 
 # ========== КЛАВИАТУРЫ ==========
 def get_reply_keyboard():
@@ -276,7 +290,6 @@ async def create_platega_payment(user_id, amount, plan):
 
 # ========== СОЗДАНИЕ ССЫЛОК ==========
 async def create_invite_link(user_id, plan):
-    """Создаёт одноразовую ссылку-приглашение в группу"""
     group_id = PREMIUM_GROUP_ID if plan == 'premium' else BASIC_GROUP_ID
     
     try:
@@ -427,23 +440,17 @@ async def start(update, context):
 
 async def premium_handler(update, context):
     query = update.callback_query; await query.answer()
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("💳 Оплатить 1500₽", callback_data="pay_premium")]
-    ])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 1500₽", callback_data="pay_premium")]])
     await query.message.reply_text(PREMIUM_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
 
 async def basic_handler(update, context):
     query = update.callback_query; await query.answer()
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("💳 Оплатить 500₽", callback_data="pay_basic")]
-    ])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Оплатить 500₽", callback_data="pay_basic")]])
     await query.message.reply_text(BASIC_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
 
 async def free_handler(update, context):
     query = update.callback_query; await query.answer()
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🆓 Перейти к боту", url=FREE_BOT_LINK)]
-    ])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🆓 Перейти к боту", url=FREE_BOT_LINK)]])
     await query.message.reply_text(FREE_DESCRIPTION, parse_mode="HTML", reply_markup=keyboard)
 
 async def pay_premium_handler(update, context):
@@ -451,7 +458,6 @@ async def pay_premium_handler(update, context):
     user_id = query.from_user.id
     await query.message.reply_text("⏳ Создаю платёж...")
     payment_url = await create_platega_payment(user_id, 1500, "premium")
-    
     if payment_url:
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Перейти к оплате", url=payment_url)]])
         await query.message.reply_text("🔗 Нажми кнопку ниже чтобы оплатить:", reply_markup=keyboard)
@@ -463,7 +469,6 @@ async def pay_basic_handler(update, context):
     user_id = query.from_user.id
     await query.message.reply_text("⏳ Создаю платёж...")
     payment_url = await create_platega_payment(user_id, 500, "basic")
-    
     if payment_url:
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("💳 Перейти к оплате", url=payment_url)]])
         await query.message.reply_text("🔗 Нажми кнопку ниже чтобы оплатить:", reply_markup=keyboard)
@@ -493,20 +498,21 @@ async def back_to_start_handler(update, context):
 # ========== АДМИН-КОМАНДЫ ==========
 async def stats_command(update, context):
     if update.effective_user.id != ADMIN_ID: return
-    customers = get_all_customers()
-    total = len(customers)
-    premium = len(get_all_premium_users())
-    basic = len(get_all_basic_users())
-    pending = len([c for c in customers if c[6] == 'pending'])
-    activated = len([c for c in customers if c[6] == 'activated'])
-    revenue = sum(c[5] for c in customers if c[6] == 'activated')
-    
-    await update.message.reply_text(
-        f"📊 <b>Статистика</b>\n\n"
-        f"👥 Всего: {total}\n⏳ Ожидают: {pending}\n✅ Активировано: {activated}\n"
-        f"👑 Premium: {premium}\n🎫 Базовый: {basic}\n💰 Выручка: {revenue}₽",
-        parse_mode="HTML"
-    )
+    try:
+        resp = requests.get(f'{API_URL}/api/stats', timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            await update.message.reply_text(
+                f"📊 *Статистика API*\n\n"
+                f"👥 Пользователей: {data.get('total_users', 0)}\n"
+                f"✅ Активных: {data.get('active_users', 0)}\n"
+                f"🏆 Макс. серия: {data.get('max_streak', 0)}\n"
+                f"📅 Всего дней: {data.get('total_days_all', 0)}",
+                parse_mode="Markdown"
+            )
+            return
+    except: pass
+    await update.message.reply_text("📊 Статистика временно недоступна")
 
 async def customers_command(update, context):
     if update.effective_user.id != ADMIN_ID: return
@@ -529,31 +535,18 @@ async def activate_premium_command(update, context):
                   (user_id, datetime.now().isoformat()))
         conn.commit(); conn.close()
         
-        # Отправляем в API
         try:
-            requests.post('https://choice-tracker-api.onrender.com/api/add-access', json={
-                'user_id': user_id,
-                'plan': 'premium',
-                'secret': 'choice_super_secret_key_2025'
+            requests.post(f'{API_URL}/api/add-access', json={
+                'user_id': user_id, 'plan': 'premium', 'secret': API_SECRET
             }, timeout=10)
-        except:
-            pass
+        except: pass
         
         invite_link = await create_invite_link(user_id, 'premium')
         
         if invite_link:
-            message = (
-                f"👑 <b>Premium активирован!</b>\n\n"
-                f"🔗 Твоя ссылка в Premium-группу:\n{invite_link}\n"
-                f"⚠️ Ссылка одноразовая, не передавай никому\n\n"
-                f"📅 Трекер: {TRACKER_LINK}"
-            )
+            message = f"👑 <b>Premium активирован!</b>\n\n🔗 Ссылка в Premium-группу:\n{invite_link}\n⚠️ Ссылка одноразовая\n\n📅 Трекер: {TRACKER_LINK}"
         else:
-            message = (
-                f"👑 <b>Premium активирован!</b>\n\n"
-                f"⚠️ Не удалось создать ссылку. Напиши @Piholaa\n\n"
-                f"📅 Трекер: {TRACKER_LINK}"
-            )
+            message = f"👑 <b>Premium активирован!</b>\n\n⚠️ Не удалось создать ссылку. Напиши @Piholaa\n\n📅 Трекер: {TRACKER_LINK}"
         
         try:
             await context.bot.send_message(chat_id=user_id, text=message, parse_mode="HTML")
@@ -575,31 +568,18 @@ async def activate_basic_command(update, context):
                   (user_id, datetime.now().isoformat()))
         conn.commit(); conn.close()
         
-        # Отправляем в API
         try:
-            requests.post('https://choice-tracker-api.onrender.com/api/add-access', json={
-                'user_id': user_id,
-                'plan': 'basic',
-                'secret': 'choice_super_secret_key_2025'
+            requests.post(f'{API_URL}/api/add-access', json={
+                'user_id': user_id, 'plan': 'basic', 'secret': API_SECRET
             }, timeout=10)
-        except:
-            pass
+        except: pass
         
         invite_link = await create_invite_link(user_id, 'basic')
         
         if invite_link:
-            message = (
-                f"🎫 <b>Базовый доступ активирован!</b>\n\n"
-                f"🔗 Твоя ссылка в группу:\n{invite_link}\n"
-                f"⚠️ Ссылка одноразовая, не передавай никому\n\n"
-                f"📅 Трекер: {TRACKER_LINK}"
-            )
+            message = f"🎫 <b>Базовый доступ активирован!</b>\n\n🔗 Ссылка в группу:\n{invite_link}\n⚠️ Ссылка одноразовая\n\n📅 Трекер: {TRACKER_LINK}"
         else:
-            message = (
-                f"🎫 <b>Базовый доступ активирован!</b>\n\n"
-                f"⚠️ Не удалось создать ссылку. Напиши @Piholaa\n\n"
-                f"📅 Трекер: {TRACKER_LINK}"
-            )
+            message = f"🎫 <b>Базовый доступ активирован!</b>\n\n⚠️ Не удалось создать ссылку. Напиши @Piholaa\n\n📅 Трекер: {TRACKER_LINK}"
         
         try:
             await context.bot.send_message(chat_id=user_id, text=message, parse_mode="HTML")
@@ -671,4 +651,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
